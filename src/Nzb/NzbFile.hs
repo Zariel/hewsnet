@@ -1,29 +1,29 @@
 module Nzb.NzbFile
 ( NzbFile(..)
 , Nzb(..)
-, NzbHeader
+, NzbHeader(..)
 , NzbSegment(..)
 ) where
 
-import Data.HashMap
-
 data Nzb = Nzb
-	{ nzbHeader :: NzbHeader
+	{ nzbHeader :: [ NzbHeader ]
 	, nzbFiles :: [ NzbFile ]
 	} deriving (Show)
 
-{-
 data NzbHeader = NzbHeader
-	{ headerTitle :: String
+	{ nzbHeaderType :: String
+	, nzbHeaderValue :: String
 	} deriving (Show)
--}
-type NzbHeader = Map String String
 
 data NzbFile = NzbFile
 	{ nzbFilePoster :: String
 	, nzbFileDate :: String
 	, nzbFileSubject :: String
+	, nzbFileSegments :: [ NzbSegment ]
+	, nzbFileGroups :: [ NzbGroup ]
 	} deriving (Show)
+
+type NzbGroup = String
 
 data NzbSegment = NzbSegment
 	{ nzbSegmentSize :: Integer

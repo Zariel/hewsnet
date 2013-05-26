@@ -1,223 +1,64 @@
+{-# LANGUAGE Arrows, NoMonomorphismRestriction #-}
+
 module Nzb.Parser
 ( parseNzb
+, getNzb
 ) where
 
 import Nzb.NzbFile
 
-import Text.Parsec
-import Text.Parsec.ByteString
-import Text.Parsec.Token
-import Text.Parsec.Perm
-import Data.ByteString
+import Text.XML.HXT.Core
 
-import Data.HashMap
-import Control.Monad
+-- Need to filter out the dtd so HxT doesnt try to fetch it, it doesnt exist.
+parseNzb :: String -> IO Nzb
+parseNzb xml = runX (parseXML (removeDTD xml) >>> getNzb) >>= (\[x] -> return x)
 
-import Debug.Trace(trace)
+removeDTD :: String -> String
+removeDTD = unlines . filter (\x -> take 9 x /= "<!DOCTYPE") . lines
 
-parseNzb :: ByteString -> Either String Nzb
-parseNzb xml = case runParser parser () "" xml of
-				 Left err -> Left $ show err
-				 Right nzb -> Right nzb
+parseXML = readString [ withValidate no
+					  , withRemoveWS yes
+					  ]
 
+getNzb = atTag "nzb" >>> proc l -> do
+	head <- atTag "head" -< l
+	header <- listA getHeader -< head
 
-parser :: Parser Nzb
-parser = do
-	preamble
-	emptyTag "nzb"
-	nzb <- parseXmlBody
-	closeTag "nzb"
-	manyTill anyChar (try eof)
+	file <- atTag "file" -< l
+	files <- listA getFiles -< file
 
-	return nzb
+	returnA -< Nzb header files
 
-parseXmlBody :: Parser Nzb
-parseXmlBody = permute (Nzb <$$> (try header) <||> (try allFiles))
-	where
-		allFiles = sepEndBy1 files (try $ closeTag "file")
-		comments :: Parser String
-		comments = do
-			string "<--"
-			manyTill anyChar (try $ string "-->")
+getHeader = atTag "meta" >>> proc l -> do
+	key <- getAttrValue "type" -< l
+	val <- text -< l
 
-		handle head files  _ = Nzb head files
+	returnA -< NzbHeader key val
 
-preamble :: Parser ()
-preamble = xmlDec >> dtdDec
+getFiles = atTag "file" >>> proc l -> do
+	poster <- getAttrValue "poster" -< l
+	date <- getAttrValue "date" -< l
+	subject <- getAttrValue "subject" -< l
 
-xmlDec :: Parser ()
-xmlDec = do
-	optional spaces
-	string "<?xml"
-	optional spaces
-	manyTill anyChar (try $ char '>')
-	optional spaces
+	group <- atTag "group" -< l
+	groups <- listA getGroups -< group
 
-	return ()
+	segment <- atTag "segment" -< l
+	segments <- listA getSegments -< segment
 
-dtdDec :: Parser ()
-dtdDec = do
-	optional spaces
-	string "<!DOCTYPE"
+	returnA -< NzbFile poster date subject segments groups
 
-	endTag
+getGroups = atTag "group" >>> proc l -> do
+	group <- text -< l
+	returnA -< group
 
-	return ()
+getSegments = atTag "segment" >>> proc l -> do
+	bytes <- getAttrValue "bytes" -< l
+	number <- getAttrValue "number" -< l
+	article <- text -< l
 
-comments :: Parser String
-comments = do
-	string "<--"
-	manyTill anyChar (try $ string "-->")
+	returnA -< NzbSegment (read bytes) (read number) article
 
---  Applies the parser, parsing optional comments
-com :: Parser a -> Parser a
-com p = optional comments >> p
+atTag tag = deep (isElem >>> hasName tag)
 
-endTag :: Parser ()
-endTag = do
-	manyTill anyChar (try $ char '>')
-	optional spaces
-
-	return ()
-
-closeTag :: String -> Parser ()
-closeTag name = do
-	optional spaces
-	string "</"
-	optional spaces
-	string name
-	optional spaces
-	char '>'
-
-	return ()
-
-emptyTag :: String -> Parser ()
-emptyTag name = tag name >>	endTag
-
-tag :: String -> Parser ()
-tag name = do
-	optional spaces
-	try (do
-		char '<'
-		notFollowedBy (char '/')
-		)
-	optional spaces
-	string name
-	optional spaces
-
-	return ()
-
-value :: Parser String
-value = between (char '"') (char '"') (many $ noneOf "\"")
-
-attribute :: String -> Parser String
-attribute name = do
-	optional spaces
-	string name
-	optional spaces
-	char '='
-	optional spaces
-	value
-
-attributes :: Parser [(String, String)]
-attributes =  manyTill kvp (char '>')
-	where
-		kvp :: Parser (String, String)
-		kvp = do
-			key <- endBy anyChar (char '=')
-			char '='
-			val <- value
-
-			return (key, val)
-
-nzbRoot :: Parser ()
-nzbRoot = emptyTag "nzb"
-
-{-
-xmlTag :: String -> Parser a -> Parser b -> Parser (a, b)
-xmlTag name attrib value = do
-	tag name
-	attribs <- attrib
-	endTag
-
-	val <- endBy value (lookAhead (try $ closeTag name))
-	closeTag name
-
-	return (attribs, val)
-
-	where
-		valBody :: String -> Parser String
-		valBody tag = manyTill anyChar (try (string tag))
--}
-
--- Nzb header is currently a HashMap
-header :: Parser NzbHeader
-header = do
-	emptyTag "head"
-	metas <- manyTill meta (lookAhead (try $ closeTag "head"))
-	closeTag "head"
-
-	return $ fromList metas
-	where
-		meta :: Parser (String, String)
-		meta = do
-			tag "meta"
-			key <- attribute "type"
-			endTag
-			val <- manyTill anyChar (lookAhead $ try (closeTag "meta"))
-			closeTag "meta"
-
-			return (key, val)
-
-files :: Parser NzbFile
-files = do
-	try $ tag "file"
-	nzbFile <- parseFile
-	endTag
-
-	(groups, segments) <- parseBody
-	lookAhead (closeTag "file")
-
-	return nzbFile
-
-	where
-		parseFile = permute (NzbFile <$$> (try $ attribute "poster") <||> (try $ attribute "date") <||> (try $ attribute "subject"))
-		parseBody = permute ((\a b -> (a, b)) <$$> (try $ parseGroups) <||> (try parseSegments))
-
-parseGroups :: Parser [ String ]
-parseGroups = do
-	emptyTag "groups"
-	groups <- manyTill group (lookAhead $ try (closeTag "groups"))
-	closeTag "groups"
-
-	return groups
-
-	where
-		group = do
-			emptyTag "group"
-			group <- manyTill anyChar (lookAhead $ try (closeTag "group"))
-			closeTag "group"
-
-			return group
-
-parseSegments :: Parser [ NzbSegment ]
-parseSegments = do
-	emptyTag "segments"
-	segments <- manyTill segment (lookAhead $ try (closeTag "segments"))
-	closeTag "segments"
-
-	return segments
-
-	where
-		segment = do
-			tag "segment"
-			(size, num) <- attr
-			endTag
-
-			article <- manyTill anyChar (lookAhead $ try (closeTag "segment"))
-			closeTag "segment"
-
-			return $ NzbSegment size num article
-
-		attr = permute ((\a b -> (int a, int b)) <$$> (try $ attribute "bytes") <||> (try $ attribute "number"))
-		int x = (read x) :: Integer
+text = getChildren >>> getText

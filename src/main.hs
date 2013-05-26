@@ -28,6 +28,6 @@ main :: IO ()
 main = do
 	args <- cmdArgs CmdLine { configFile = def, nzbFile = def }
 	--openConfig args >>= startServer
-	B.readFile (nzbFile args) >>= print . parseNzb
+	readFile (nzbFile args) >>= parseNzb >>= print
 
 	return ()
