@@ -11,7 +11,7 @@ import Text.XML.HXT.Core
 
 -- Need to filter out the dtd so HxT doesnt try to fetch it, it doesnt exist.
 parseNzb :: String -> IO Nzb
-parseNzb xml = runX (parseXML (removeDTD xml) >>> getNzb) >>= (\[x] -> return x)
+parseNzb xml = runX (parseXML (removeDTD xml) >>> getNzb) >>= (return . head)
 
 removeDTD :: String -> String
 removeDTD = unlines . filter (\x -> take 9 x /= "<!DOCTYPE") . lines
@@ -24,8 +24,7 @@ getNzb = atTag "nzb" >>> proc l -> do
 	head <- atTag "head" -< l
 	header <- listA getHeader -< head
 
-	file <- atTag "file" -< l
-	files <- listA getFiles -< file
+	files <- listA getFile -< l
 
 	returnA -< Nzb header files
 
@@ -35,15 +34,15 @@ getHeader = atTag "meta" >>> proc l -> do
 
 	returnA -< NzbHeader key val
 
-getFiles = atTag "file" >>> proc l -> do
+getFile = atTag "file" >>> proc l -> do
 	poster <- getAttrValue "poster" -< l
 	date <- getAttrValue "date" -< l
 	subject <- getAttrValue "subject" -< l
 
-	group <- atTag "group" -< l
+	group <- atTag "groups" -< l
 	groups <- listA getGroups -< group
 
-	segment <- atTag "segment" -< l
+	segment <- atTag "segments" -< l
 	segments <- listA getSegments -< segment
 
 	returnA -< NzbFile poster date subject segments groups
