@@ -2,7 +2,6 @@
 
 module Nzb.Parser
 ( parseNzb
-, getNzb
 ) where
 
 import Nzb.NzbFile
