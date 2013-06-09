@@ -23,4 +23,5 @@ executable usenet-hs
                , cmdargs == 0.10.* 
                , bytestring == 0.10.*
                , hxt == 9.3.*
+               , io-streams == 1.1.*
   hs-source-dirs: src
