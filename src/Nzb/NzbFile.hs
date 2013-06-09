@@ -3,6 +3,7 @@ module Nzb.NzbFile
 , Nzb(..)
 , NzbHeader(..)
 , NzbSegment(..)
+, NzbGroup
 ) where
 
 data Nzb = Nzb
