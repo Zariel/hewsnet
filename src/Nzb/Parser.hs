@@ -19,6 +19,7 @@ parseXML = readString [ withValidate no
 					  , withRemoveWS yes
 					  ]
 
+getNzb :: ArrowXml a => a XmlTree Nzb
 getNzb = atTag "nzb" >>> proc l -> do
 	head <- atTag "head" -< l
 	header <- listA getHeader -< head
@@ -27,12 +28,14 @@ getNzb = atTag "nzb" >>> proc l -> do
 
 	returnA -< Nzb header files
 
+getHeader :: ArrowXml a => a XmlTree NzbHeader
 getHeader = atTag "meta" >>> proc l -> do
 	key <- getAttrValue "type" -< l
 	val <- text -< l
 
 	returnA -< NzbHeader key val
 
+getFile :: ArrowXml a => a XmlTree NzbFile
 getFile = atTag "file" >>> proc l -> do
 	poster <- getAttrValue "poster" -< l
 	date <- getAttrValue "date" -< l
@@ -46,10 +49,12 @@ getFile = atTag "file" >>> proc l -> do
 
 	returnA -< NzbFile poster date subject segments groups
 
+getGroups :: ArrowXml a => a XmlTree NzbGroup
 getGroups = atTag "group" >>> proc l -> do
 	group <- text -< l
 	returnA -< group
 
+getSegments :: ArrowXml a => a XmlTree NzbSegment
 getSegments = atTag "segment" >>> proc l -> do
 	bytes <- getAttrValue "bytes" -< l
 	number <- getAttrValue "number" -< l
