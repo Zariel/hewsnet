@@ -24,4 +24,6 @@ executable usenet-hs
                , bytestring == 0.10.*
                , hxt == 9.3.*
                , io-streams == 1.1.*
+               , network == 2.4.*
+               , mtl == 2.1.*
   hs-source-dirs: src
