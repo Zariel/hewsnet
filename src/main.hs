@@ -1,4 +1,9 @@
-import qualified Data.ByteString as B
+
+import Control.Monad
+
+import Network.Socket.Internal
+
+import qualified Data.ByteString.Lazy as B
 import System.Console.CmdArgs.Implicit
 
 import NNTP.Client
@@ -14,7 +19,7 @@ startServer :: Int -> IO ()
 startServer = undefined
 
 main :: IO ()
-main = do
+main = withSocketsDo $ do
 	args <- cmdArgs CmdLine
 		{ configFile = def
 		, nzbFile = def
