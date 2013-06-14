@@ -26,5 +26,9 @@ main = withSocketsDo $ do
 		}
 	--openConfig args >>= startServer
 	nzb <- readFile (nzbFile args) >>= parseNzb
+	json <- B.readFile (configFile args)
+	case openConfig json of
+	  Just conf -> nntpMain nzb (head $ configServers conf) >>= print
+	  Nothing -> print "Cant parse"
 
 	return ()
