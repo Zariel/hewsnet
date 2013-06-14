@@ -21,12 +21,12 @@ parseXML = readString [ withValidate no
 
 getNzb :: ArrowXml a => a XmlTree Nzb
 getNzb = atTag "nzb" >>> proc l -> do
-	head <- atTag "head" -< l
-	header <- listA getHeader -< head
+	--head <- atTag "head" -< l
+	--header <- listA getHeader -< head
 
 	files <- listA getFile -< l
 
-	returnA -< Nzb header files
+	returnA -< Nzb [] files
 
 getHeader :: ArrowXml a => a XmlTree NzbHeader
 getHeader = atTag "meta" >>> proc l -> do
