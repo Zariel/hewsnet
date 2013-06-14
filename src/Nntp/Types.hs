@@ -23,3 +23,4 @@ data NNTPServer = NNTPServer
 	}
 
 
+type CommandLine = B.ByteString
