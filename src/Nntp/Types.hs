@@ -1,7 +1,8 @@
 module NNTP.Types
-( NNTPResponse
+( NNTPResponse(..)
 , NNTPServerT
 , NNTPServer(..)
+, CommandLine
 ) where
 
 import qualified Data.ByteString as B
@@ -12,8 +13,6 @@ import Network.Socket (Socket)
 
 import Config
 
-type NNTPResponse = (Int, B.ByteString)
-
 type NNTPServerT = ReaderT NNTPServer IO
 data NNTPServer = NNTPServer
 	{ nntpInput :: InputStream B.ByteString
@@ -22,5 +21,9 @@ data NNTPServer = NNTPServer
 	, nntpConfig :: ServerConfig
 	}
 
-
 type CommandLine = B.ByteString
+
+data NNTPResponse = NNTPSuccess (Int, B.ByteString)
+				  | NNTPClientError (Int, B.ByteString)
+				  | NNTPServerError (Int, B.ByteString)
+				  deriving (Show)

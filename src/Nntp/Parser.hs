@@ -21,4 +21,11 @@ responseParser = do
 	code <- P.takeWhile P8.isDigit_w8 <* P8.char8 ' '
 	body <- P.takeTill P8.isEndOfLine <* P8.endOfLine
 
-	return $ (read . unpack $ decodeUtf8 code, body)
+	return $ getResponse (read . unpack $ decodeUtf8 code) body
+
+getResponse :: Int -> B.ByteString -> NNTPResponse
+getResponse code body
+	| code >= 500 = NNTPServerError (code, body)
+	| code >= 400 = NNTPClientError (code, body)
+	| code >= 200 = NNTPSuccess (code, body)
+	| otherwise   =  NNTPClientError (code, body)
