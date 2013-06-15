@@ -30,6 +30,7 @@ executable usenet-hs
                , HsOpenSSL == 0.10.*
                , attoparsec == 0.10.*
                , text == 0.11.3.*
+               , stm == 2.4.*
   hs-source-dirs: src
 
  -- vim: set et

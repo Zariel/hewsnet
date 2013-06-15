@@ -1,9 +1,4 @@
-module NNTP.Types
-( NNTPResponse(..)
-, NNTPServerT
-, NNTPServer(..)
-, CommandLine
-) where
+module NNTP.Types where
 
 import qualified Data.ByteString as B
 
@@ -11,7 +6,14 @@ import System.IO.Streams (InputStream, OutputStream)
 import Control.Monad.Reader
 import Network.Socket (Socket)
 
+import Control.Concurrent.STM.TQueue
+
+import Nzb
+
 import Config
+
+-- A queue which holds Nzbs
+type NzbQueue = TQueue Nzb
 
 type NNTPServerT = ReaderT NNTPServer IO
 data NNTPServer = NNTPServer

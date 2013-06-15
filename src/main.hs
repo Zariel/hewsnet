@@ -1,5 +1,8 @@
 
+import Control.Concurrent.STM.TQueue
+
 import Control.Monad
+import Control.Monad.STM
 
 import Network.Socket.Internal
 
@@ -11,6 +14,7 @@ import NNTP.Types
 
 import Nzb
 import Nzb.Parser
+
 import Config
 
 data CmdLine = CmdLine { configFile :: String
@@ -28,10 +32,12 @@ main = withSocketsDo $ do
 		, nzbFile = def
 		}
 	--openConfig args >>= startServer
+	-- A queue which Nzb's can be sent down
+	queue <- atomically newTQueue :: IO (NzbQueue)
 	nzb <- readFile (nzbFile args) >>= parseNzb
 	json <- B.readFile (configFile args)
 	case openConfig json of
-	  Just conf -> nntpMain nzb (head $ configServers conf) >>= print
+	  Just conf -> nntpMain queue (head $ configServers conf) >>= print
 	  Nothing -> print "Cant parse"
 
 	return ()
