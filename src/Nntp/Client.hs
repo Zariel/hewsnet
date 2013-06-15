@@ -54,12 +54,3 @@ fetchArticle groups (NzbSegment size number article) = do
 	nntpArticle (BC.pack article)
 	where
 		group = (BC.pack . head) groups
-
-nntpSend :: CommandLine -> NNTPServerT NNTPResponse
-nntpSend cmd = do
-	os <- asks nntpOutput
-	is <- asks nntpInput
-
-	liftIO $ print cmd
-	liftIO $ S.write (Just cmd) os
-	liftIO $ parseFromStream responseParser is

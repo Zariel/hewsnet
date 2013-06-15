@@ -1,12 +1,11 @@
 module NNTP.Commands
-(
-, nntpAuth
+( nntpAuth
 , nntpQuit
 , nntpGroup
 , nntpArticle
 ) where
-type CommandLine = B.ByteString
 
+-- Internal function to send an NNTP command
 nntpSend :: CommandLine -> NNTPServerT NNTPResponse
 nntpSend cmd = do
 	os <- asks nntpOutput
