@@ -8,7 +8,7 @@ module NNTP.Internal
 import NNTP.Types
 import NNTP.Parser
 
-import Nzb.NzbFile
+import Nzb
 
 import Config
 

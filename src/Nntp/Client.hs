@@ -17,7 +17,7 @@ import qualified System.IO.Streams as S
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BC
 
-import Nzb.NzbFile
+import Nzb
 
 import NNTP.Types
 import NNTP.Parser

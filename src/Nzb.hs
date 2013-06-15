@@ -1,4 +1,4 @@
-module Nzb.NzbFile
+module Nzb
 ( NzbFile(..)
 , Nzb(..)
 , NzbHeader(..)

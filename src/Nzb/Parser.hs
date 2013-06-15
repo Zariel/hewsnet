@@ -4,7 +4,7 @@ module Nzb.Parser
 ( parseNzb
 ) where
 
-import Nzb.NzbFile
+import Nzb
 
 import Text.XML.HXT.Core
 

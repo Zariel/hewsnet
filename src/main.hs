@@ -7,6 +7,9 @@ import qualified Data.ByteString.Lazy as B
 import System.Console.CmdArgs.Implicit
 
 import NNTP.Client
+import NNTP.Types
+
+import Nzb
 import Nzb.Parser
 import Config
 
