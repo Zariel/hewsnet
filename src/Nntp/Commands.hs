@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
+
 module NNTP.Commands
 ( nntpAuth
 , nntpQuit
@@ -5,22 +7,22 @@ module NNTP.Commands
 , nntpArticle
 ) where
 
--- Internal function to send an NNTP command
-nntpSend :: CommandLine -> NNTPServerT NNTPResponse
-nntpSend cmd = do
-	os <- asks nntpOutput
-	is <- asks nntpInput
+import NNTP.Internal
+import NNTP.Types
 
-	liftIO $ print cmd
-	liftIO $ S.write (Just cmd) os
-	liftIO $ parseFromStream responseParser is
+import Config
+
+import Control.Monad.Reader
+
+import qualified Data.ByteString as B
+import qualified Data.ByteString.Char8 as BC
 
 nntpAuth :: NNTPServerT NNTPResponse
 nntpAuth = do
 	user <- asks (serverUserName . nntpConfig)
-	nntpSend $ mkCmd "AUTHINFO USER" (BC.pack user)
-
 	pass <- asks (serverPassword . nntpConfig)
+
+	nntpSend $ mkCmd "AUTHINFO USER" (BC.pack user)
 	nntpSend $ mkCmd "AUTHINFO PASS" (BC.pack pass)
 
 nntpQuit :: NNTPServerT NNTPResponse
