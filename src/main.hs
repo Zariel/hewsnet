@@ -33,11 +33,17 @@ main = withSocketsDo $ do
 		}
 	--openConfig args >>= startServer
 	-- A queue which Nzb's can be sent down
-	queue <- atomically newTQueue :: IO (NzbQueue)
+	inQ <- atomically newTQueue :: IO NzbQueue
+	-- Output writing queue is seperate from the main one
+	outQ <- atomically newTQueue :: IO WriterQueue
+
 	nzb <- readFile (nzbFile args) >>= parseNzb
 	json <- B.readFile (configFile args)
+
+	pipeQueue (take 2 $ nzbToDownload nzb) inQ
+
 	case openConfig json of
-	  Just conf -> nntpMain queue (head $ configServers conf) >>= print
+	  Just conf -> nntpMain inQ outQ (head $ configServers conf) >>= print
 	  Nothing -> print "Cant parse"
 
 	return ()
