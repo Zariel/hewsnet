@@ -30,15 +30,17 @@ import NNTP.Commands
 
 import Config
 
-nntpMain :: NzbQueue -> ServerConfig -> IO NNTPResponse
-nntpMain queue conf = bracket (nntpConnect conf) (sClose . nntpSocket) loop
+nntpMain :: NzbQueue -> WriterQueue -> ServerConfig -> IO NNTPResponse
+nntpMain inQ outQ conf = bracket (nntpConnect conf) (sClose . nntpSocket) run
 	where
-		loop :: NNTPServer -> IO NNTPResponse
-		loop st = runReaderT (nntpRun queue) st
+		run :: NNTPServer -> IO NNTPResponse
+		run st = runReaderT (nntpRun inQ outQ) st
 
-nntpRun :: NzbQueue -> NNTPServerT NNTPResponse
-nntpRun queue = do
+nntpRun :: NzbQueue -> WriterQueue -> NNTPServerT NNTPResponse
+nntpRun inQ outQ = do
 	nntpAuth
+	-- Probably need to put a command channel in here too =\
+	loop inQ outQ
 	nntpQuit
 
 fetchArticle :: [NzbGroup] -> NzbSegment -> NNTPServerT NNTPResponse
