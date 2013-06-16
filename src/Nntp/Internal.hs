@@ -23,6 +23,8 @@ import System.IO.Streams (InputStream, OutputStream)
 import System.IO.Streams.Attoparsec
 import qualified System.IO.Streams as S
 
+nntpRead = parseFromStream responseParser
+
 -- Sends a formatted NNTP request to the sever and parses the repsonse
 nntpSend :: CommandLine -> NNTPServerT NNTPResponse
 nntpSend cmd = do
@@ -31,7 +33,7 @@ nntpSend cmd = do
 
 	liftIO $ print cmd
 	liftIO $ S.write (Just cmd) os
-	liftIO $ parseFromStream responseParser is
+	liftIO $ nntpRead is
 
 -- Connect to an NNTP Server with a given config and create the streams
 nntpConnect :: ServerConfig -> IO NNTPServer
@@ -42,5 +44,7 @@ nntpConnect config = do
 	connect sock (addrAddress addr)
 	(is, os) <- S.socketToStreams sock
 
-	return $ NNTPServer is os sock config
+	-- Need to expect the 200 hello from the server
+	nntpRead is
 
+	return $ NNTPServer is os sock config
