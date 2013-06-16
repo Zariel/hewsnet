@@ -30,24 +30,24 @@ import NNTP.Commands
 
 import Config
 
-nntpMain :: NzbQueue -> WriterQueue -> ServerConfig -> IO NNTPResponse
+nntpMain :: NzbQueue -> WriterQueue -> ServerConfig -> IO ()
 nntpMain inQ outQ conf = bracket (nntpConnect conf) (sClose . nntpSocket) run
 	where
-		run :: NNTPServer -> IO NNTPResponse
+		run :: NNTPServer -> IO ()
 		run st = runReaderT (nntpRun inQ outQ) st
 
-nntpRun :: NzbQueue -> WriterQueue -> NNTPServerT NNTPResponse
+nntpRun :: NzbQueue -> WriterQueue -> NNTPServerT ()
 nntpRun inQ outQ = do
 	nntpAuth
 	-- Probably need to put a command channel in here too =\
-	loop inQ outQ
+	forever $ loop inQ outQ
 	nntpQuit
+	return ()
 
 loop :: NzbQueue -> WriterQueue -> NNTPServerT NNTPResponse
 loop inQ outQ = do
 	segment <- atomIO $ readTQueue inQ
 	fetchArticle segment
-	loop inQ outQ
 
 atomIO :: STM a -> NNTPServerT a
 atomIO = liftIO . atomically

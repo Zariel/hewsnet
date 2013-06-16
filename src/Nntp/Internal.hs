@@ -31,8 +31,9 @@ nntpSend cmd = do
 	os <- asks nntpOutput
 	is <- asks nntpInput
 
+	logM cmd
 	liftIO $ S.write (Just cmd) os
-	liftIO $ nntpRead is
+	(liftIO $ nntpRead is) >>= logM
 
 logM :: (Show a) => a -> NNTPServerT a
 logM msg = do
