@@ -22,8 +22,6 @@ data CmdLine = CmdLine { configFile :: String
                        }
 	deriving (Show, Data, Typeable)
 
-startServer :: Int -> IO ()
-startServer = undefined
 
 main :: IO ()
 main = withSocketsDo $ do
