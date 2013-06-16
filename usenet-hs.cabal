@@ -15,7 +15,7 @@ build-type:          Simple
 cabal-version:       >=1.8
 
 executable usenet-hs
-  ghc-options: -O2
+  ghc-options: -O2 -threaded
   extensions: DeriveDataTypeable
   -- other-modules:       
   main-is:				main.hs
