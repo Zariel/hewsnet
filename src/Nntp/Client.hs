@@ -43,9 +43,18 @@ nntpRun inQ outQ = do
 	loop inQ outQ
 	nntpQuit
 
-fetchArticle :: [NzbGroup] -> NzbSegment -> NNTPServerT NNTPResponse
-fetchArticle groups (NzbSegment size number article) = do
-	nntpGroup group >>= (liftIO . print)
-	nntpArticle (BC.pack article)
+loop :: NzbQueue -> WriterQueue -> NNTPServerT NNTPResponse
+loop inQ outQ = do
+	segment <- atomIO $ readTQueue inQ
+	fetchArticle segment
+	loop inQ outQ
+
+atomIO :: STM a -> NNTPServerT a
+atomIO = liftIO . atomically
+
+fetchArticle :: NzbDownloadThing -> NNTPServerT NNTPResponse
+fetchArticle (subject, segment, groups) = do
+	nntpGroup' group
+	nntpArticle $ segmentToArticle segment
 	where
-		group = (BC.pack . head) groups
+		group = head groups
