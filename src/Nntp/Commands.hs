@@ -5,6 +5,7 @@ module NNTP.Commands
 , nntpQuit
 , nntpGroup
 , nntpArticle
+, nntpGroup'
 ) where
 
 import NNTP.Internal
@@ -32,6 +33,9 @@ nntpQuit = nntpSend $ mkCmd0 "QUIT"
 
 nntpGroup :: B.ByteString -> NNTPServerT NNTPResponse
 nntpGroup group = nntpSend (mkCmd "GROUP" group)
+
+nntpGroup' :: String -> NNTPServerT NNTPResponse
+nntpGroup' = nntpGroup . BC.pack
 
 nntpArticle :: NzbArticle -> NNTPServerT NNTPResponse
 nntpArticle article = nntpSend (mkCmd "STAT" article)
