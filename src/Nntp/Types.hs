@@ -13,7 +13,9 @@ import Nzb
 import Config
 
 -- A queue which holds Nzbs
-type NzbQueue = TQueue Nzb
+type NzbQueue = TQueue NzbDownloadThing
+
+type WriterQueue = TQueue (NNTPResponse, String)
 
 type NNTPServerT = ReaderT NNTPServer IO
 data NNTPServer = NNTPServer
@@ -29,3 +31,5 @@ data NNTPResponse = NNTPSuccess (Int, B.ByteString)
 				  | NNTPClientError (Int, B.ByteString)
 				  | NNTPServerError (Int, B.ByteString)
 				  deriving (Show)
+
+type NzbDownloadThing = (String, NzbSegment, [ NzbGroup ])
