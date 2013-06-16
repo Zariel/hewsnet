@@ -1,10 +1,15 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Nzb
 ( NzbFile(..)
 , Nzb(..)
 , NzbHeader(..)
 , NzbSegment(..)
 , NzbGroup
+, NzbArticle
+, segmentToArticle
 ) where
+
+import qualified Data.ByteString.Char8 as B
 
 data Nzb = Nzb
 	{ nzbHeader :: [ NzbHeader ]
@@ -31,3 +36,8 @@ data NzbSegment = NzbSegment
 	, nzbSegmentNumber :: Integer
 	, nzbSegmentArticle :: String
 	} deriving (Show)
+
+type NzbArticle = B.ByteString
+
+segmentToArticle :: NzbSegment -> NzbArticle
+segmentToArticle (NzbSegment _ _ article) = B.concat ["<", (B.pack article), ">"]

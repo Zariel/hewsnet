@@ -12,6 +12,8 @@ import NNTP.Types
 
 import Config
 
+import Nzb
+
 import Control.Monad.Reader
 
 import qualified Data.ByteString as B
@@ -31,7 +33,7 @@ nntpQuit = nntpSend $ mkCmd0 "QUIT"
 nntpGroup :: B.ByteString -> NNTPServerT NNTPResponse
 nntpGroup group = nntpSend (mkCmd "GROUP" group)
 
-nntpArticle :: B.ByteString -> NNTPServerT NNTPResponse
+nntpArticle :: NzbArticle -> NNTPServerT NNTPResponse
 nntpArticle article = nntpSend (mkCmd "STAT" article)
 
 -- Command lines have a command space arg crlf form
