@@ -31,15 +31,18 @@ nntpSend cmd = do
 	os <- asks nntpOutput
 	is <- asks nntpInput
 
-	liftIO $ print cmd
 	liftIO $ S.write (Just cmd) os
 	liftIO $ nntpRead is
+
+logM :: (Show a) => a -> NNTPServerT a
+logM msg = do
+	(liftIO . print) msg
+	return msg
 
 -- Connect to an NNTP Server with a given config and create the streams
 nntpConnect :: ServerConfig -> IO NNTPServer
 nntpConnect config = do
 	addr <- fmap head (getAddrInfo Nothing (Just $ serverHost config) (Just . show $ serverPort config))
-	print addr
 	sock <- socket (addrFamily addr) Stream (defaultProtocol)
 	connect sock (addrAddress addr)
 	(is, os) <- S.socketToStreams sock
