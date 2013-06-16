@@ -17,13 +17,15 @@ type NzbQueue = TQueue NzbDownloadThing
 
 type WriterQueue = TQueue (NNTPResponse, String)
 
-type NNTPServerT = ReaderT NNTPServer IO
 data NNTPServer = NNTPServer
 	{ nntpInput :: InputStream B.ByteString
 	, nntpOutput :: OutputStream B.ByteString
 	, nntpSocket :: Socket
 	, nntpConfig :: ServerConfig
 	}
+
+-- NNTPServer reader type
+type NNTPServerT = ReaderT NNTPServer IO
 
 type CommandLine = B.ByteString
 
