@@ -33,3 +33,12 @@ data NNTPResponse = NNTPSuccess (Int, B.ByteString)
 				  deriving (Show)
 
 type NzbDownloadThing = (String, NzbSegment, [ NzbGroup ])
+
+nzbToDownload :: Nzb -> [ NzbDownloadThing ]
+nzbToDownload nzb = concat $ map nzbMapper (nzbFiles nzb)
+	where
+		nzbMapper :: NzbFile -> [ NzbDownloadThing ]
+		nzbMapper (NzbFile poster date subject segments groups) = map (segMapper subject groups) segments
+
+		segMapper :: String -> [NzbGroup] -> NzbSegment -> NzbDownloadThing
+		segMapper subject groups segment = (subject, segment, groups)
