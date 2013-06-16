@@ -22,6 +22,8 @@ data CmdLine = CmdLine { configFile :: String
                        }
 	deriving (Show, Data, Typeable)
 
+pipeQueue :: [a] -> TQueue a -> IO ()
+pipeQueue vals queue = atomically $ mapM_ (writeTQueue queue) vals
 
 main :: IO ()
 main = withSocketsDo $ do
