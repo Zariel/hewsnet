@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 
-module NNTP.Commands
+module Nntp.Commands
 ( nntpAuth
 , nntpQuit
 , nntpGroup
@@ -8,8 +8,8 @@ module NNTP.Commands
 , nntpGroup'
 ) where
 
-import NNTP.Internal
-import NNTP.Types
+import Nntp.Internal
+import Nntp.Types
 
 import Config
 

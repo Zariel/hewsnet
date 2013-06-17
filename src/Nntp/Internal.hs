@@ -1,12 +1,12 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 
-module NNTP.Internal
+module Nntp.Internal
 ( nntpSend
 , nntpConnect
 ) where
 
-import NNTP.Types
-import NNTP.Parser
+import Nntp.Types
+import Nntp.Parser
 
 import Nzb
 

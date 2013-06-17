@@ -11,8 +11,8 @@ import Network.Socket.Internal
 import qualified Data.ByteString.Lazy as B
 import System.Console.CmdArgs.Implicit
 
-import NNTP.Client
-import NNTP.Types
+import Nntp.Client
+import Nntp.Types
 
 import Nzb.Parser
 

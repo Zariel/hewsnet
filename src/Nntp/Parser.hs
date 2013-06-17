@@ -1,8 +1,8 @@
-module NNTP.Parser
+module Nntp.Parser
 ( responseParser
 ) where
 
-import NNTP.Types
+import Nntp.Types
 
 import Control.Applicative
 

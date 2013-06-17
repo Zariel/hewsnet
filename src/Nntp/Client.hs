@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 
-module NNTP.Client
+module Nntp.Client
 ( fetchArticle
 , nntpMain
 ) where
@@ -23,10 +23,10 @@ import qualified Data.ByteString.Char8 as BC
 
 import Nzb
 
-import NNTP.Types
-import NNTP.Parser
-import NNTP.Internal
-import NNTP.Commands
+import Nntp.Types
+import Nntp.Parser
+import Nntp.Internal
+import Nntp.Commands
 
 import Config
 

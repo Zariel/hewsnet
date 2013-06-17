@@ -1,4 +1,4 @@
-module NNTP.Types where
+module Nntp.Types where
 
 import qualified Data.ByteString as B
 
