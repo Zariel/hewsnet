@@ -52,3 +52,11 @@ nntpConnect config = do
 	nntpRead is
 
 	return $ NNTPServer is os sock config
+
+-- Combinator, given a response execute the given command if the first succeeds
+cont :: CommandLine -> NNTPResponse -> NNTPServerT NNTPResponse
+cont cmd (NNTPSuccess _) = nntpSend cmd
+cont _ res = return res
+
+(>@>) :: NNTPServerT NNTPResponse -> CommandLine -> NNTPServerT NNTPResponse
+(>@>) res cmd = res >>= (cont cmd)
