@@ -3,6 +3,8 @@
 module Nntp.Internal
 ( nntpSend
 , nntpConnect
+, nntpApply
+, (>|>)
 ) where
 
 import Nntp.Types
@@ -54,9 +56,10 @@ nntpConnect config = do
 	return $ NNTPServer is os sock config
 
 -- Combinator, given a response execute the given command if the first succeeds
-cont :: CommandLine -> NNTPResponse -> NNTPServerT NNTPResponse
-cont cmd (NNTPSuccess _) = nntpSend cmd
-cont _ res = return res
+nntpApply :: CommandLine -> NNTPResponse -> NNTPServerT NNTPResponse
+nntpApply cmd (NNTPSuccess _) = nntpSend cmd
+nntpApply _ res = return res
 
-(>@>) :: NNTPServerT NNTPResponse -> CommandLine -> NNTPServerT NNTPResponse
-(>@>) res cmd = res >>= (cont cmd)
+-- Infix version of nntpApply
+(>|>) :: NNTPServerT NNTPResponse -> CommandLine -> NNTPServerT NNTPResponse
+(>|>) res cmd = res >>= (nntpApply cmd)
