@@ -13,7 +13,7 @@ import Nzb
 import Config
 
 -- A queue which holds Nzbs
-type NzbQueue = TQueue NzbDownloadThing
+type NzbQueue = TQueue (Maybe NzbDownloadThing)
 
 type WriterQueue = TQueue (NNTPResponse, String)
 
