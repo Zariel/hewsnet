@@ -1,4 +1,6 @@
 
+
+import Control.Concurrent.STM.TMVar
 import Control.Concurrent.STM.TQueue
 
 import Control.Monad
@@ -26,18 +28,32 @@ data CmdLine = CmdLine { configFile :: String
 pipeQueue :: [a] -> TQueue a -> IO ()
 pipeQueue vals queue = atomically $ mapM_ (writeTQueue queue) vals
 
-run :: Maybe Config -> IO (Maybe ThreadId)
-run Nothing = return Nothing
-run (Just conf) = do
+concatMapM :: (Monad m) => (a -> m [b]) -> [a] -> m [b]
+concatMapM f xs = (liftM concat) $ mapM f xs
+
+startThreadDispather :: Config -> IO (TMVar Bool)
+startThreadDispather config = do
+	outQ <- atomically newTQueue :: IO WriterQueue
+	-- Going to need a state or something to hold the queue and threadIDs
+	concatMapM (run outQ) (configServers config) >>= print
+
+	atomically newEmptyTMVar
+
+-- Start a thread for each connection
+run :: WriterQueue -> ServerConfig -> IO [ThreadId]
+run outQ serverConfig = do
 	-- A queue which Nzb's can be sent down
 	inQ <- atomically newTQueue :: IO NzbQueue
-	-- Output writing queue is seperate from the main one
-	outQ <- atomically newTQueue :: IO WriterQueue
 
-	tid <- forkIO $ nntpMain inQ outQ (head $ configServers conf)
-	return $ Just tid
+	replicateM (serverConections serverConfig) (forkIO $ nntpMain inQ outQ serverConfig)
 
-main :: IO (Maybe ThreadId)
+hewsnet :: Config -> IO ()
+hewsnet config = do
+	var <- startThreadDispather config
+	atomically $ takeTMVar var
+	return ()
+
+main :: IO ()
 main = withSocketsDo $ do
 	args <- cmdArgs CmdLine
 		{ configFile = def
@@ -45,4 +61,8 @@ main = withSocketsDo $ do
 		}
 
 	file <- B.readFile (configFile args)
-	run $ openConfig file
+	case (openConfig file) of
+		Just conf -> hewsnet conf >>= print
+		Nothing -> print "Unable to openConfig"
+
+	return ()
