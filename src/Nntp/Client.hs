@@ -39,18 +39,25 @@ nntpMain inQ outQ conf = bracket (nntpConnect conf) (sClose . nntpSocket) run
 nntpRun :: NzbQueue -> WriterQueue -> NNTPServerT ()
 nntpRun inQ outQ = do
 	nntpAuth
-	-- Probably need to put a command channel in here too =\
-	forever $ loop inQ outQ
+	loop inQ outQ
 	nntpQuit
 	return ()
 
-loop :: NzbQueue -> WriterQueue -> NNTPServerT NNTPResponse
+-- Given if a Nothing comes into the queue then the loop stops. This isnt ideal and may have to be replaced later
+loop :: NzbQueue -> WriterQueue -> NNTPServerT ()
 loop inQ outQ = do
-	segment <- atomIO $ readTQueue inQ
-	fetchArticle segment
+	work <- atomIO $ readTQueue inQ
+
+	case work of
+		Just segment -> fetchArticle segment >>= (writer inQ outQ) >> loop inQ outQ
+		Nothing -> return ()
 
 atomIO :: STM a -> NNTPServerT a
 atomIO = liftIO . atomically
+
+-- Handles sending downloaded data to the writer queue, if the download failed, or it has not enough blocks. What do we do?
+writer :: NzbQueue -> WriterQueue -> NNTPResponse -> NNTPServerT ()
+writer inQ outQ res = undefined
 
 fetchArticle :: NzbDownloadThing -> NNTPServerT NNTPResponse
 fetchArticle (subject, segment, groups) = do
