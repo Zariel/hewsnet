@@ -25,8 +25,7 @@ nntpAuth = do
 	user <- asks (serverUserName . nntpConfig)
 	pass <- asks (serverPassword . nntpConfig)
 
-	nntpSend $ mkCmd "AUTHINFO USER" (BC.pack user)
-	nntpSend $ mkCmd "AUTHINFO PASS" (BC.pack pass)
+	(nntpSend $ mkCmd "AUTHINFO USER" (BC.pack user)) >|> mkCmd "AUTHINFO PASS" (BC.pack pass)
 
 nntpQuit :: NNTPServerT NNTPResponse
 nntpQuit = nntpSend $ mkCmd0 "QUIT"
