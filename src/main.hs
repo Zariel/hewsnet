@@ -20,10 +20,19 @@ import Nzb.Parser
 
 import Config
 
-data CmdLine = CmdLine { configFile :: String
-                       , nzbFile :: String
-                       }
-	deriving (Show, Data, Typeable)
+data CmdLine = CmdLine
+	{ configFile :: String
+    , nzbFile :: String
+	} deriving (Show, Data, Typeable)
+
+data NNTPThread = NNTPThread
+	{ nntpInputQueue :: NzbQueue
+	, nntpOutpuQueue :: WriterQueue
+	, nntpThreadId :: ThreadId
+	}
+
+instance Show NNTPThread where
+	show = show . nntpThreadId
 
 pipeQueue :: [a] -> TQueue a -> IO ()
 pipeQueue vals queue = atomically $ mapM_ (writeTQueue queue) vals
@@ -40,12 +49,20 @@ startThreadDispather config = do
 	atomically newEmptyTMVar
 
 -- Start a thread for each connection
-run :: WriterQueue -> ServerConfig -> IO [ThreadId]
+run :: WriterQueue -> ServerConfig -> IO [NNTPThread]
 run outQ serverConfig = do
 	-- A queue which Nzb's can be sent down
 	inQ <- atomically newTQueue :: IO NzbQueue
 
-	replicateM (serverConections serverConfig) (forkIO $ nntpMain inQ outQ serverConfig)
+	threads <- replicateM (serverConections serverConfig) (startThread inQ)
+
+	return threads
+	where
+		startThread :: NzbQueue -> IO NNTPThread
+		startThread inQ = do
+			threadId <- forkIO $ nntpMain inQ outQ serverConfig
+
+			return $ NNTPThread inQ outQ threadId
 
 hewsnet :: Config -> IO ()
 hewsnet config = do
